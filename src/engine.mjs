@@ -3,8 +3,8 @@ import { validatePortableV02, PortableMemoryV02Schema } from './schema/pmf-v0.2.
 import { resolveMigrationPath } from './migrations/registry.mjs';
 
 const schemaByVersion = {
-  '0.1': PortableMemoryV01Schema,
-  '0.2': PortableMemoryV02Schema,
+  0.1: PortableMemoryV01Schema,
+  0.2: PortableMemoryV02Schema,
 };
 
 const DEFAULT_MIGRATOR = 'format-survives-upgrades@0.1.0';
@@ -28,7 +28,9 @@ export function runMigration(doc, targetVersion, opts = {}) {
 
   const inputValidation = sourceSchema.safeParse(doc);
   if (!inputValidation.success) {
-    const errors = inputValidation.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ');
+    const errors = inputValidation.error.errors
+      .map((e) => `${e.path.join('.')}: ${e.message}`)
+      .join('; ');
     throw new Error(`input validation failed: ${errors}`);
   }
   const validated = inputValidation.data;
@@ -56,7 +58,9 @@ export function runMigration(doc, targetVersion, opts = {}) {
   const targetSchema = schemaByVersion[targetVersion];
   const outputValidation = targetSchema.safeParse(current);
   if (!outputValidation.success) {
-    const errors = outputValidation.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ');
+    const errors = outputValidation.error.errors
+      .map((e) => `${e.path.join('.')}: ${e.message}`)
+      .join('; ');
     throw new Error(`output validation failed: ${errors}`);
   }
 

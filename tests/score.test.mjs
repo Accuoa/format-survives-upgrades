@@ -6,7 +6,10 @@ describe('scoreSample', () => {
     const actual = {
       ok: true,
       doc: {
-        memories: [{ text: 'A', metadata: { tags: [] } }, { text: 'B', metadata: { tags: [] } }],
+        memories: [
+          { text: 'A', metadata: { tags: [] } },
+          { text: 'B', metadata: { tags: [] } },
+        ],
         provenance: { migrated_from: '0.1' },
       },
     };
@@ -21,24 +24,60 @@ describe('scoreSample', () => {
   });
 
   it('fails when memories_count mismatches', () => {
-    const actual = { ok: true, doc: { memories: [{ text: 'A', metadata: { tags: [] } }], provenance: { migrated_from: '0.1' } } };
-    const expected = { memories_count: 2, first_text: 'A', first_metadata_tags: [], has_provenance: true, provenance_migrated_from: '0.1' };
+    const actual = {
+      ok: true,
+      doc: {
+        memories: [{ text: 'A', metadata: { tags: [] } }],
+        provenance: { migrated_from: '0.1' },
+      },
+    };
+    const expected = {
+      memories_count: 2,
+      first_text: 'A',
+      first_metadata_tags: [],
+      has_provenance: true,
+      provenance_migrated_from: '0.1',
+    };
     const r = scoreSample(actual, expected);
     expect(r.passed).toBe(false);
     expect(r.reason).toMatch(/count/i);
   });
 
   it('fails when first_text mismatches', () => {
-    const actual = { ok: true, doc: { memories: [{ text: 'X', metadata: { tags: [] } }], provenance: { migrated_from: '0.1' } } };
-    const expected = { memories_count: 1, first_text: 'A', first_metadata_tags: [], has_provenance: true, provenance_migrated_from: '0.1' };
+    const actual = {
+      ok: true,
+      doc: {
+        memories: [{ text: 'X', metadata: { tags: [] } }],
+        provenance: { migrated_from: '0.1' },
+      },
+    };
+    const expected = {
+      memories_count: 1,
+      first_text: 'A',
+      first_metadata_tags: [],
+      has_provenance: true,
+      provenance_migrated_from: '0.1',
+    };
     const r = scoreSample(actual, expected);
     expect(r.passed).toBe(false);
     expect(r.reason).toMatch(/text/i);
   });
 
   it('fails when first_metadata_tags mismatches', () => {
-    const actual = { ok: true, doc: { memories: [{ text: 'A', metadata: { tags: ['extra'] } }], provenance: { migrated_from: '0.1' } } };
-    const expected = { memories_count: 1, first_text: 'A', first_metadata_tags: [], has_provenance: true, provenance_migrated_from: '0.1' };
+    const actual = {
+      ok: true,
+      doc: {
+        memories: [{ text: 'A', metadata: { tags: ['extra'] } }],
+        provenance: { migrated_from: '0.1' },
+      },
+    };
+    const expected = {
+      memories_count: 1,
+      first_text: 'A',
+      first_metadata_tags: [],
+      has_provenance: true,
+      provenance_migrated_from: '0.1',
+    };
     const r = scoreSample(actual, expected);
     expect(r.passed).toBe(false);
     expect(r.reason).toMatch(/tags/i);

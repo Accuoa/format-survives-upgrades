@@ -36,17 +36,29 @@ describe('runMigration', () => {
 
   it('throws when input fails validation against declared version', () => {
     const bad = { format: 'wrong', version: '0.1', source: { vendor: 'x' }, memories: [] };
-    expect(() => runMigration(bad, '0.2', { now: fixedNow, migrator: fixedMigrator })).toThrow(/validation/i);
+    expect(() => runMigration(bad, '0.2', { now: fixedNow, migrator: fixedMigrator })).toThrow(
+      /validation/i,
+    );
   });
 
   it('throws when input lacks a version field', () => {
     const bad = { format: 'portable-memory-format', source: { vendor: 'x' }, memories: [] };
-    expect(() => runMigration(bad, '0.2', { now: fixedNow, migrator: fixedMigrator })).toThrow(/version/i);
+    expect(() => runMigration(bad, '0.2', { now: fixedNow, migrator: fixedMigrator })).toThrow(
+      /version/i,
+    );
   });
 
   it('throws on downgrade attempt (v0.2 → v0.1)', () => {
-    const v02 = { ...validV01, version: '0.2', memories: [{ ...validV01.memories[0], metadata: { ...validV01.memories[0].metadata, tags: [] } }] };
-    expect(() => runMigration(v02, '0.1', { now: fixedNow, migrator: fixedMigrator })).toThrow(/no migration path from 0.2 to 0.1/i);
+    const v02 = {
+      ...validV01,
+      version: '0.2',
+      memories: [
+        { ...validV01.memories[0], metadata: { ...validV01.memories[0].metadata, tags: [] } },
+      ],
+    };
+    expect(() => runMigration(v02, '0.1', { now: fixedNow, migrator: fixedMigrator })).toThrow(
+      /no migration path from 0.2 to 0.1/i,
+    );
   });
 
   it('output validates against target version schema', () => {

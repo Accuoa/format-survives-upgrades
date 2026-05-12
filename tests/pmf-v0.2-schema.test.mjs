@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { PortableMemoryV02Schema, validatePortableV02, MemoryEntryV02Schema } from '../src/schema/pmf-v0.2.mjs';
+import {
+  PortableMemoryV02Schema,
+  validatePortableV02,
+  MemoryEntryV02Schema,
+} from '../src/schema/pmf-v0.2.mjs';
 
 describe('PortableMemoryV02Schema', () => {
   it('accepts a valid minimal v0.2 document', () => {

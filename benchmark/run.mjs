@@ -83,13 +83,19 @@ function main() {
   console.log(`  scoring...            ${samples.length}/${samples.length} OK`);
   console.log('');
   console.log('FIDELITY:');
-  console.log(`  happy-path (${happyTotal}):  ${happyPass}/${happyTotal} (${pct(happyPass / happyTotal)})`);
-  console.log(`  edge-case (${edgeTotal}):   ${edgePass}/${edgeTotal} (${pct(edgePass / edgeTotal)})`);
+  console.log(
+    `  happy-path (${happyTotal}):  ${happyPass}/${happyTotal} (${pct(happyPass / happyTotal)})`,
+  );
+  console.log(
+    `  edge-case (${edgeTotal}):   ${edgePass}/${edgeTotal} (${pct(edgePass / edgeTotal)})`,
+  );
   console.log(
     `  malformed (${malformedTotal}):    ${malformedPass}/${malformedTotal} errored cleanly (${pct(malformedPass / malformedTotal)})`,
   );
   console.log('');
-  console.log(`  total:                ${totalPass}/${samples.length} (${pct(totalPass / samples.length)})`);
+  console.log(
+    `  total:                ${totalPass}/${samples.length} (${pct(totalPass / samples.length)})`,
+  );
 
   const externalCalls = countExternalCalls(auditLogPath);
   console.log('');
