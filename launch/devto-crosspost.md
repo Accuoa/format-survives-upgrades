@@ -1,0 +1,103 @@
+---
+title: "AI memory format versioning, demonstrated — PMF v0.1 → v0.2 in one command"
+published: false
+description: "Vendor-neutral versioning rules for AI memory formats + a working PMF v0.1 → v0.2 migration CLI. Zero external calls, deterministic, MIT."
+tags: ai, opensource, mcp, protocols
+canonical_url: https://accuoa.github.io/format-survives-upgrades/launch
+---
+
+<!-- Section 1: Implementer's fictional draft — Aiden rewrites with the real moment before publishing. -->
+
+## Why I built this
+
+Last week I shipped PMF v0.1 as part of my `context-portability` project — a vendor-neutral format for AI memory that any assistant can write to or read from. It felt clean. One command, two outputs, no external calls. I was happy with it for about four days, until I sat down to add a field. I wanted a `source_app` tag on each memory entry so downstream tools could filter by origin. Reasonable ask. But the moment I started drafting the schema change, I hit a wall: there was no written rule for whether this was a breaking change or an additive one. I'd called it "v0.1" without specifying what a "v0.2" was allowed to do.
+
+I went looking for prior art. Semver covers code APIs — it doesn't say anything about what happens when a consumer reads a document that has fields it doesn't recognize. JSON Schema validates a document but has no opinion on migrations. MCP, which I'd been watching closely, had its own capability-negotiation story but nothing at the layer of "here's how a stored memory document should handle version drift." The field I was trying to add was genuinely additive — no existing field removed, no type changed — but I had no shared language to say that with authority.
+
+So I wrote down the rules I wished existed, then demonstrated them on PMF as the worked example. `format-survives-upgrades` is what came out: vendor-neutral versioning rules for AI memory formats, plus a full PMF v0.1 → v0.2 migration CLI that proves they hold. The rules are in Part 1 of `SPEC.md`. The demo is one command. The numbers are real.
+
+---
+
+## What's broken today
+
+AI memory formats are proliferating. Every assistant product that stores persistent context has invented its own schema, and none of them have published a versioning policy. ChatGPT's memory export lands as a flat JSON envelope whose shape isn't documented anywhere public. Claude Projects exports conversation context in its own structure. Self-hosted alternatives like memorystore have their own ingest schemas. Each of these will eventually need a v0.2. None of them have written down what that means.
+
+The gap isn't the formats themselves — some of them are well-designed. The gap is the absence of any shared convention for what constitutes an additive change versus a breaking one. Right now, if a format adds a field between v0.1 and v0.2, a consumer that was built against v0.1 has two choices: crash on the unknown field, or silently swallow it. Either behavior is reasonable in isolation; the problem is that no producer is telling consumers which one to expect, because no producer has committed to a policy.
+
+The result is silent breakage on upgrade. A tool built against today's PMF schema will work until someone adds a field without announcing it — and then it either starts throwing validation errors in production, or it quietly drops data it doesn't recognize. Both failure modes are invisible until a user notices something is missing. The field has zero shared convention here, and the cost of that gap compounds every time a new format ships.
+
+---
+
+## Why existing solutions fall short
+
+Semver is the obvious answer and it's the wrong one for this layer. Semver tells you whether a code API changed in a compatible way. It doesn't say anything about what a consumer of a stored document should do when it encounters a field it wasn't compiled against. The consumer is often a different tool, written by a different team, that read a MAJOR.MINOR.PATCH string and concluded "minor bump, safe to load" — without knowing whether the producer's definition of "safe" matches theirs.
+
+JSON Schema solves validation but has no opinion on migration. You can assert that a document conforms to v0.2, but the schema alone doesn't tell you how to get a v0.1 document into that state, or whether a v0.1 consumer can safely open a v0.2 document it's never seen before. The "forward compatibility" problem — can an older reader handle a newer document? — is simply out of scope for schema validation.
+
+MCP itself wrestled with capability versioning during its early months and landed on a negotiation protocol at the connection layer. That's the right solution for RPC-style APIs. It's not portable to the problem of a stored document sitting in a file on disk, written by one tool and read by another weeks later, with no live connection to negotiate over. Nothing in the existing ecosystem covers AI memory formats with working migration tooling at the document layer.
+
+---
+
+## The proposal in plain English
+
+`format-survives-upgrades` is two things in one repo. The first is a set of vendor-neutral versioning rules written in `SPEC.md` Part 1. MINOR bumps are additive-only: no field removed, no type narrowed. Consumers must ignore unknown fields rather than rejecting them. MAJOR bumps require a documented migration path. These rules aren't revolutionary — they're the discipline that code library maintainers have applied for years, written down for the specific context of stored AI memory documents.
+
+The second thing is a working PMF v0.1 → v0.2 migration, implemented as a CLI that demonstrates every rule in practice. PMF v0.2 adds two things: a `tags` array per memory entry (additive, MINOR-safe) and a `provenance` block at the document level. Provenance is the centerpiece: every migrated document declares `migrated_from`, `migrated_at`, and `migrator`, so any downstream consumer can distinguish a natively-produced v0.2 document from one that passed through the migration engine. That distinction matters for applying defensive checks — if you know a document was migrated, you can validate it more carefully.
+
+Stable IDs must be stable under additive change. A memory entry's ID is derived from its content and metadata — adding a new field at the document level doesn't perturb it. The CLI enforces this: if a migration changes a stable ID, the scorer flags it as a fidelity failure. Run it yourself:
+
+```bash
+node src/cli.mjs migrate \
+  --in pmf-v01.json \
+  --out pmf-v02.json
+```
+
+---
+
+## The numbers
+
+The benchmark runs 30 hand-built samples across three categories: 15 happy-path cases (normal PMF v0.1 documents), 10 edge cases (unicode content, deeply-nested tags, entries with no metadata, unusually large memory counts), and 5 malformed inputs designed to surface parser failures. Every sample that should migrate does. Every malformed input errors cleanly — no panics, no partial output, no silent data loss.
+
+The scorer checks four things per sample: entry count matches, entry text is byte-identical, tags are preserved, and provenance is present and structurally valid. All four must pass for a sample to score as migrated correctly. The benchmark also asserts on network footprint: every HTTP call made during a run is logged to `./logs/network.jsonl`, and the final assertion is that the count is zero. That's a live audit log, not a mock — you can inspect it after any run.
+
+Determinism is proved by running the engine three times with a fixed `now` timestamp and fixed `migrator` string, then diffing the outputs. All three runs produce byte-identical files. `diff` returns nothing. Output from the current run:
+
+```
+[format-survives-upgrades] running benchmark — 30 samples
+
+  parsing samples...    30/30 OK
+  scoring...            30/30 OK
+
+FIDELITY:
+  happy-path (15):  15/15 (100.0%)
+  edge-case (10):   10/10 (100.0%)
+  malformed (5):    5/5 errored cleanly (100.0%)
+
+  total:                30/30 (100.0%)
+
+NETWORK FOOTPRINT:
+  external calls:  0
+  audit log:       ./logs/network.jsonl
+
+STATUS: Strong band
+```
+
+"Strong band" is the benchmark's top classification. To land here you need 100% fidelity across all categories, zero external calls, and three byte-identical runs. The sample count is honest — 30 is not a massive corpus — but the methodology is: every sample was built by hand, the categories are labeled, and the output is deterministic so you can reproduce it yourself with no setup beyond `node`.
+
+---
+
+## What I want from you
+
+Try `migrate` on a real PMF v0.1 document and file an issue if anything breaks. The 30 benchmark samples cover the edge cases I could anticipate; real documents from real workflows will surface ones I didn't. A diff of the unexpected output is enough — I'll add a fixture and fix the engine.
+
+Weigh in on the versioning rules in `SPEC.md` Part 1. They're written for PMF but intentionally vendor-neutral — if you maintain a different AI memory format and the rules don't fit your constraints, I want to know where they break. A comment in an issue is enough. If the rules need a carve-out for your case, that's a signal worth capturing before more tooling is built against them.
+
+Propose v0.3 if PMF is missing a field you need. The schema is open, the versioning rules are written down, and the migration engine has a registry for adding new paths. A field proposal with a one-line rationale is a fine starting point for a PR.
+
+---
+
+## Where to find me
+
+- GitHub: [@Accuoa](https://github.com/Accuoa) — the repo and issues live here.
+- Twitter/X: [@AccuoaAgent](https://twitter.com/AccuoaAgent) — launch thread and updates.
+- dev.to: [@accuoa](https://dev.to/accuoa) — longer write-ups cross-posted here.
