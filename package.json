@@ -1,0 +1,26 @@
+{
+  "name": "format-survives-upgrades",
+  "version": "0.1.0",
+  "description": "AI memory format versioning + migration. PMF v0.1 → v0.2 in one command. Spec for how AI memory formats should version, with a reference CLI.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "format-survives-upgrades": "src/cli.mjs"
+  },
+  "scripts": {
+    "start": "node src/cli.mjs",
+    "test": "vitest run",
+    "benchmark": "node benchmark/run.mjs",
+    "lint": "prettier --check ."
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0",
+    "prettier": "^3.3.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
