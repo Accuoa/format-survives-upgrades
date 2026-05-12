@@ -1,42 +1,43 @@
 {
   "project": {
     "slug": "format-survives-upgrades",
-    "name": "FormatSurvivesUpgrades",
-    "statusBadge": "concept — no code yet",
+    "name": "format-survives-upgrades",
+    "statusBadge": "alpha demo",
     "primaryCta": {
-      "label": "Read on GitHub",
-      "href": "https://github.com/Accuoa/format-survives-upgrades"
+      "label": "Read the spec",
+      "href": "https://github.com/Accuoa/format-survives-upgrades/blob/main/SPEC.md"
     }
   },
   "hero": {
-    "headline": "Placeholder — content lands when this idea ships."
+    "headline": "AI memory format versioning, demonstrated — PMF v0.1 → v0.2 in one command. 100% fidelity, zero external calls."
   },
   "problem": {
-    "body": "This page is a placeholder. Real content arrives as part of this project’s launch in the next two weeks."
+    "body": "Every AI memory format that ships will need to evolve. ChatGPT changes its export shape; vendor-neutral formats add fields; consumers wake up to schema breakage. The field has spent zero serious time defining how memory formats should version. Add a field, ship a doc, hope nothing downstream cared about that exact shape."
   },
   "proposal": {
-    "body": "When this project ships, this section describes the proposal — what this primitive is and isn’t, in plain language."
+    "body": "format-survives-upgrades does two things in one repo: it publishes a vendor-neutral versioning rules spec for AI memory formats (additive minor bumps, forward-compat consumers, provenance for migrated docs, stable-id stability under additive change), AND it demonstrates those rules on a real format — PMF v0.2 with a working v0.1 → v0.2 migration CLI. 100% migration fidelity verified on 30 hand-built samples, zero external network calls, three byte-identical runs."
   },
   "whyNow": {
-    "body": "When this project ships, this section explains what shifted in 2025-2026 that makes this newly possible or needed."
+    "body": "Plan 5 (context-portability) shipped PMF v0.1 last week. Plan 4 (memorystore) shipped a consumer. The format is real, in use, and about to need a second version. The right moment to plant versioning rules is when there's exactly one format that uses them — credible, testable, not theoretical."
   },
   "cta": {
-    "headline": "Get notified when this ships.",
+    "headline": "Get notified when format-survives-upgrades hits 1.0.",
     "secondary": {
       "label": "Get updates",
       "placeholder": "your@email.com"
     }
   },
   "about": {
-    "body": "Built by Aiden. This is an exploratory project — feedback welcome.",
-    "githubUrl": "https://github.com/Accuoa",
-    "contactUrl": "https://twitter.com/aidenbolin"
+    "body": "Built by Aiden — solo developer working through a portfolio of AI primitives in 2026. format-survives-upgrades is one of several exploratory bets; see the hub for the others. This is alpha — expect rough edges, and please file issues.",
+    "githubUrl": "https://github.com/Accuoa/format-survives-upgrades",
+    "contactUrl": "https://twitter.com/AccuoaAgent"
   },
   "email": {
     "captureEndpoint": "https://api.aidenbolin.dev/signup",
     "projectId": "format-survives-upgrades"
   },
   "footer": {
-    "license": "Apache-2.0"
+    "license": "MIT",
+    "rssUrl": "https://accuoa.github.io/rss.xml"
   }
 }
